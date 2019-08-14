@@ -1,0 +1,120 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+namespace TlsGameDemo1
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+            txtFilePath.Text = "";
+        }
+
+        /// <summary>
+        /// 选择文件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnChose_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                OpenFileDialog openFileDialog = new OpenFileDialog();
+                openFileDialog.InitialDirectory = "c:\\";
+                openFileDialog.Filter = "exe|*.exe|所有文件|*.*";
+                openFileDialog.RestoreDirectory = true;
+                openFileDialog.FilterIndex = 1;
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    txtFilePath.Text = openFileDialog.FileName;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+           
+        }
+
+        /// <summary>
+        /// 读取文件信息
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnRead_Click(object sender, EventArgs e)
+        {
+            try
+            { 
+            txtFileInfo.Text = Helper.GetFileInfo(txtFilePath.Text);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 转换字符串格式玩，，没啥用，orz，
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnChange_Click(object sender, EventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(txtClientIV.Text))
+            {
+                byte[] bytes1 = System.Text.Encoding.ASCII.GetBytes(txtClientIV.Text.Trim());
+                txtClientIVBytes.Text = Helper.BytesToString(bytes1);
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtServerIV.Text))
+            {
+                txtServerIVBytes.Text = Helper.BytesToString(System.Text.Encoding.UTF8.GetBytes(txtServerIV.Text.Trim()));
+            }
+
+            if (!string.IsNullOrWhiteSpace(txtToken.Text))
+            {
+                txtTokenBytes.Text = Helper.BytesToString(System.Text.Encoding.UTF8.GetBytes(txtToken.Text.Trim()));
+            }
+        }
+
+        /// <summary>
+        /// 转换Token
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnEn_Click(object sender, EventArgs e)
+        {
+            txtReturnBytes.Text = "";
+            btnReturnBase64.Text = "";
+            try
+            {
+                string[] vers = txtFileInfo.Text.Split('|');
+
+                byte[] decryptedBytesKey = Helper.GetDecryptedBytesKey(
+                    System.Text.Encoding.UTF8.GetBytes(txtClientIV.Text.Trim()),
+                    System.Text.Encoding.UTF8.GetBytes(txtServerIV.Text.Trim()),
+                    System.Text.Encoding.UTF8.GetBytes(txtToken.Text.Trim()),
+                    int.Parse(vers[0]),
+                    int.Parse(vers[1]),
+                    int.Parse(vers[2]),
+                    int.Parse(vers[3]));
+
+                txtReturnBytes.Text = Helper.BytesToString(decryptedBytesKey); 
+                btnReturnBase64.Text =  Convert.ToBase64String(decryptedBytesKey);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        
+    }
+}
