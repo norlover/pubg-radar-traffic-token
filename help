@@ -1,0 +1,85 @@
+using System;
+using System.Diagnostics;
+
+namespace TlsGameDemo1
+{
+    public class Helper
+    {
+        /// <summary>
+        /// 返回处理后的Token(字节数组)
+        /// </summary>
+        /// <param name="ClientIV"></param>
+        /// <param name="ServerIV"></param>
+        /// <param name="Token"></param>
+        /// <param name="dwMajor"></param>
+        /// <param name="dwMinor"></param>
+        /// <param name="dwBuildNumber"></param>
+        /// <param name="dwRevision4"></param>
+        /// <returns></returns>
+        public static byte[] GetDecryptedBytesKey(byte[] ClientIV, byte[] ServerIV, byte[] Token, int dwMajor, int dwMinor, int dwBuildNumber, int dwRevision4)
+        {
+            byte[] ReturnToken = new byte[24];
+            Token.CopyTo(ReturnToken, 0);
+            ;
+            for (int i = 0; i < 24; i++)
+            {
+                if (i % 4 < 1) ReturnToken[i] += (byte)dwMajor;
+                if (i % 4 < 2) ReturnToken[i] += (byte)(dwMinor + i);
+                if (i % 4 < 3) ReturnToken[i] += (byte)(dwBuildNumber - i); ;
+                ReturnToken[i] += (byte)(i ^ dwRevision4);
+                ReturnToken[i] ^= ClientIV[(i + 8) % 16];
+                ReturnToken[i] ^= ServerIV[(i + 8) % 16];
+            }
+            return ReturnToken;
+        }
+
+        /// <summary>
+        /// 获取处理后的Token(base64字符串)
+        /// </summary>
+        /// <param name="ClientIV"></param>
+        /// <param name="ServerIV"></param>
+        /// <param name="Token"></param>
+        /// <param name="dwMajor"></param>
+        /// <param name="dwMinor"></param>
+        /// <param name="dwBuildNumber"></param>
+        /// <param name="dwRevision4"></param>
+        /// <returns></returns>
+        public static string GetDecryptedKey(byte[] ClientIV, byte[] ServerIV, byte[] Token, int dwMajor, int dwMinor, int dwBuildNumber, int dwRevision4)
+        {
+            byte[] ReturnToken = GetDecryptedBytesKey(ClientIV, ServerIV, Token, dwMajor, dwMinor, dwBuildNumber, dwRevision4);
+            return Convert.ToBase64String(ReturnToken);
+        }
+
+        /// <summary>
+        /// 获取文件版本信息
+        /// </summary>
+        /// <param name="filepath"></param>
+        /// <returns></returns>
+        public static string GetFileInfo(string filepath)
+        {
+            FileVersionInfo file = FileVersionInfo.GetVersionInfo(filepath);
+            String Version = file.FileMajorPart + "|" + file.FileMinorPart + "|" + file.FileBuildPart + "|" + file.FilePrivatePart;
+            return Version;
+        }
+
+        //转16进制字符串
+        public static string BytesToString(byte[] bytes)
+        {
+            //有分隔符的api
+            return BitConverter.ToString(bytes);  
+
+            //或者自己遍历
+            //string strRet = "";
+            //for (int i = 0; i < bytes.Length; i++)
+            //{
+            //    strRet += bytes[i].ToString("X2");
+            //}
+            //return strRet;
+        }
+
+
+
+
+
+    }
+}
